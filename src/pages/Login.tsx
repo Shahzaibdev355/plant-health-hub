@@ -27,8 +27,8 @@ const Login = () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    toast.success("Login successful!");
-    navigate("/dashboard");
+    toast.success("Login successful! Please verify OTP.");
+    navigate("/verify-otp");
   };
 
   return (

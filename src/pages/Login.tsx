@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
+import api from "@/api/axios";
+import { useAuthStore } from "@/store/auth-store";
+
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -20,16 +23,51 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+
+  const setLogin = useAuthStore((state) => state.setLogin);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const res = await api.post("/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-    toast.success("Login successful! Please verify OTP.");
-    navigate("/verify-otp");
+      const { accesstoken, userId, twoFactorAuthActivated } = res.data.data;
+
+      // save login state
+      setLogin(accesstoken, userId, twoFactorAuthActivated);
+
+      if (twoFactorAuthActivated) {
+        navigate("/verify-otp");
+      } else {
+        navigate("/activate-2fa");
+      }
+
+      toast.success("Login successful! Please verify OTP.");
+      // navigate("/verify-otp");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Invalid email or password"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsSubmitting(true);
+
+  //   // Simulate API call
+  //   await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  //   toast.success("Login successful! Please verify OTP.");
+  //   navigate("/verify-otp");
+  // };
 
   return (
     <div className="min-h-screen bg-secondary flex items-center justify-center p-4">

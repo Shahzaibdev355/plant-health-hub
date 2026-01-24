@@ -14,6 +14,12 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProfileModal } from "@/components/dashboard/ProfileModal";
 
+
+import { useEffect } from "react";
+import api from "@/api/axios";
+import { useAuthStore } from "@/store/auth-store";
+
+
 interface SidebarContextType {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
@@ -43,9 +49,45 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/");
+  
+  
+  const { logout, clearUserProfile } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout"); // clears cookies on server
+    } catch (err) {
+      // even if request fails, still logout locally
+      console.error("Logout error:", err);
+    } finally {
+      logout();               // clear Zustand state
+      clearUserProfile();
+      navigate("/login");     // redirect
+    }
   };
+
+
+  const { userProfile, setUserProfile } = useAuthStore();
+
+  useEffect(() => {
+    if (!userProfile) {
+      api.get("/auth/userInfo")
+        .then((res) => {
+          const data = res.data.data;
+          setUserProfile({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phoneNo: data.phoneNo,
+            twoFactorActivated: data.twoFactorAuth.activated,
+            createdAt: data.createdAt,
+          });
+        })
+        .catch(() => {
+          console.log("Failed to fetch user info");
+        });
+    }
+  }, []);
 
   return (
     <SidebarContext.Provider
@@ -103,9 +145,8 @@ export const DashboardLayout = () => {
 
         {/* Desktop Sidebar */}
         <aside
-          className={`hidden md:flex flex-col bg-card border-r border-border transition-all duration-300 ${
-            isCollapsed ? "w-20" : "w-64"
-          }`}
+          className={`hidden md:flex flex-col bg-card border-r border-border transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"
+            }`}
         >
           <SidebarContent
             isCollapsed={isCollapsed}
@@ -175,9 +216,8 @@ const SidebarContent = ({
             <Link
               key={item.path}
               to={item.path}
-              className={`sidebar-item ${isActive ? "sidebar-item-active" : ""} ${
-                isCollapsed ? "justify-center" : ""
-              }`}
+              className={`sidebar-item ${isActive ? "sidebar-item-active" : ""} ${isCollapsed ? "justify-center" : ""
+                }`}
               title={isCollapsed ? item.label : undefined}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -199,9 +239,8 @@ const SidebarContent = ({
       <div className="py-4 px-3 border-t border-border space-y-2">
         <button
           onClick={onLogout}
-          className={`sidebar-item w-full text-destructive hover:bg-destructive/10 ${
-            isCollapsed ? "justify-center" : ""
-          }`}
+          className={`sidebar-item w-full text-destructive hover:bg-destructive/10 ${isCollapsed ? "justify-center" : ""
+            }`}
           title={isCollapsed ? "Logout" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />

@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
+import axios from "@/api/axios";
+
+
 interface PasswordRequirement {
   label: string;
   test: (password: string) => boolean;
@@ -54,6 +57,7 @@ const Signup = () => {
     return "Strong";
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -67,12 +71,49 @@ const Signup = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      setIsSubmitting(true);
 
-    toast.success("Account created successfully!");
-    navigate("/verify-email");
+      const res = await axios.post("/auth/register", {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        phoneNo: Number(formData.phone),
+      });
+
+      toast.success("Account created successfully!");
+      navigate("/activate-2fa");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error || "Registration failed";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (formData.password !== formData.confirmPassword) {
+  //     toast.error("Passwords do not match");
+  //     return;
+  //   }
+
+  //   if (passwordStrength < 3) {
+  //     toast.error("Please use a stronger password");
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+  //   await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  //   toast.success("Account created successfully!");
+  //   navigate("/verify-email");
+  // };
 
   return (
     <div className="min-h-screen bg-secondary flex items-center justify-center p-4">

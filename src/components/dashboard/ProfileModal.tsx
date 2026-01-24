@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Edit2, Save, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+
+import { useAuthStore } from "@/store/auth-store";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -14,12 +16,33 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    phone: "+1 (555) 123-4567",
-    email: "john@example.com",
-  });
+  // const [profile, setProfile] = useState({
+  //   firstName: "John",
+  //   lastName: "Doe",
+  //   phone: "+1 (555) 123-4567",
+  //   email: "john@example.com",
+  // });
+
+  const { userProfile } = useAuthStore();
+
+  const [profile, setProfile] = useState(() => ({
+    firstName: userProfile?.firstName || "",
+    lastName: userProfile?.lastName || "",
+    phone: userProfile?.phoneNo?.toString() || "",
+    email: userProfile?.email || "",
+  }));
+
+  useEffect(() => {
+    if (userProfile) {
+      setProfile({
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        phone: userProfile.phoneNo.toString(),
+        email: userProfile.email,
+      });
+    }
+  }, [userProfile, isOpen]);
+
 
   const [editedProfile, setEditedProfile] = useState(profile);
 

@@ -11,7 +11,17 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
+
+import { useAuthStore } from "@/store/auth-store";
+import axios from "@/api/axios";
+
+
 const VerifyOTP = () => {
+
+  const { userId, accessToken, twoFactorEnabled, setOtpVerified, setLogin, qrDataUrl } = useAuthStore();
+
+
+
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,22 +38,43 @@ const VerifyOTP = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (otp.length !== 6) {
       toast.error("Please enter a valid 6-digit code");
       return;
     }
 
-    setIsSubmitting(true);
+    try {
+      setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await axios.post(
+        "/auth/verify-2fa",
+        { totp: otp },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-    toast.success("OTP verified successfully!");
-    navigate("/dashboard");
+      const { accessToken: newToken, userId } = res.data.data;
+
+      // OTP verified → full login
+      setLogin(newToken, userId, true);
+      setOtpVerified();
+
+      toast.success("OTP verified successfully!");
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Invalid OTP");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   // Sample authenticator secret for QR code (in production, this would come from the backend)
   const authenticatorSecret = "JBSWY3DPEHPK3PXP";
@@ -88,12 +119,18 @@ const VerifyOTP = () => {
           <h1 className="text-2xl font-semibold text-foreground text-center mb-2">
             Two-Factor Authentication
           </h1>
-          <p className="text-muted-foreground text-center mb-6 text-sm">
+          {/* <p className="text-muted-foreground text-center mb-6 text-sm">
             Scan the QR code with your authenticator app and enter the verification code
+          </p> */}
+
+          <p className="text-muted-foreground text-center mb-6 text-sm">
+            {twoFactorEnabled
+              ? "2FA already enabled. Check your authenticator app and enter the verification code."
+              : "Scan the QR code with your authenticator app and enter the verification code"}
           </p>
 
           {/* QR Code */}
-          <div className="flex justify-center mb-6">
+          {/* <div className="flex justify-center mb-6">
             <div className="p-4 bg-white rounded-xl border border-border shadow-sm">
               <QRCodeSVG
                 value={otpauthUrl}
@@ -104,7 +141,33 @@ const VerifyOTP = () => {
                 fgColor="#1a1a1a"
               />
             </div>
-          </div>
+          </div> */}
+
+
+          {/* {!twoFactorEnabled && (
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-white rounded-xl border border-border shadow-sm">
+                <QRCodeSVG
+                  value={otpauthUrl}
+                  size={160}
+                  level="H"
+                  includeMargin={false}
+                  bgColor="#FFFFFF"
+                  fgColor="#1a1a1a"
+                />
+              </div>
+            </div>
+          )} */}
+
+
+          {!twoFactorEnabled && qrDataUrl && (
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-white rounded-xl border border-border shadow-sm">
+                <img src={qrDataUrl} alt="2FA QR Code" className="w-40 h-40" />
+              </div>
+            </div>
+          )}
+
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* OTP Input */}
@@ -118,28 +181,28 @@ const VerifyOTP = () => {
                 onChange={(value) => setOtp(value)}
               >
                 <InputOTPGroup className="gap-2">
-                  <InputOTPSlot 
-                    index={0} 
+                  <InputOTPSlot
+                    index={0}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
-                  <InputOTPSlot 
-                    index={1} 
+                  <InputOTPSlot
+                    index={1}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
-                  <InputOTPSlot 
-                    index={2} 
+                  <InputOTPSlot
+                    index={2}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
-                  <InputOTPSlot 
-                    index={3} 
+                  <InputOTPSlot
+                    index={3}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
-                  <InputOTPSlot 
-                    index={4} 
+                  <InputOTPSlot
+                    index={4}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
-                  <InputOTPSlot 
-                    index={5} 
+                  <InputOTPSlot
+                    index={5}
                     className="w-12 h-14 text-lg font-semibold rounded-lg border-border bg-background"
                   />
                 </InputOTPGroup>
@@ -149,10 +212,9 @@ const VerifyOTP = () => {
             {/* Countdown Timer */}
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center gap-2">
-                <span 
-                  className={`text-2xl font-bold ${
-                    countdown <= 10 ? 'text-destructive' : 'text-primary'
-                  }`}
+                <span
+                  className={`text-2xl font-bold ${countdown <= 10 ? 'text-destructive' : 'text-primary'
+                    }`}
                 >
                   {countdown}s
                 </span>

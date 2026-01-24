@@ -25,18 +25,27 @@ const VerifyOTP = () => {
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(45);
 
   // Countdown timer
+  // useEffect(() => {
+  //   if (countdown <= 0) return;
+
+  //   const timer = setInterval(() => {
+  //     setCountdown((prev) => prev - 1);
+  //   }, 1000);
+
+  //   return () => clearInterval(timer);
+  // }, [countdown]);
+
+
   useEffect(() => {
-    if (countdown <= 0) return;
-
     const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
+      setCountdown((prev) => (prev <= 0 ? 45 : prev - 1));
     }, 1000);
-
+  
     return () => clearInterval(timer);
-  }, [countdown]);
+  }, []);
 
 
   const handleSubmit = async (e: React.FormEvent) => {

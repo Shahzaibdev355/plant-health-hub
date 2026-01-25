@@ -83,7 +83,7 @@ const Signup = () => {
       });
 
       toast.success("Account created successfully!");
-      navigate("/activate-2fa");
+      navigate("/login");
     } catch (err: any) {
       const message =
         err?.response?.data?.error || "Registration failed";

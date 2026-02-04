@@ -17,4 +17,6 @@ const Activate2FaRoute = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
+
+
 export default Activate2FaRoute;

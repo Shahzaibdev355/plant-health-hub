@@ -1,18 +1,5 @@
 import { create } from "zustand";
 
-// type AuthState = {
-//     isLoggedIn: boolean;
-//     otpVerified: boolean;
-//     twoFactorEnabled: boolean;
-//     accessToken: string | null;
-//     userId: string | null;
-//     qrDataUrl?: string;
-
-//     setLogin: (token: string, userId: string, twoFactorEnabled: boolean) => void;
-//     setQrDataUrl: (url: string) => void;
-//     setOtpVerified: () => void;
-//     logout: () => void;
-// };
 
 
 interface UserProfile {

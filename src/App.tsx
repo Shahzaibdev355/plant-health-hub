@@ -29,8 +29,11 @@ const App = () => (
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
+
           <Route path="/login" element={<Login />} />
+
           <Route path="/signup" element={<Signup />} />
+          
           <Route path="/verify-email" element={<VerifyEmail />} />
 
 
@@ -82,6 +85,7 @@ const App = () => (
               }
             />
           </Route>
+
 
 
           {/* Catch-all */}

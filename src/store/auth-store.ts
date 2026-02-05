@@ -1,85 +1,79 @@
 import { create } from "zustand";
-
-
+import { persist } from "zustand/middleware";
 
 interface UserProfile {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phoneNo: number;
-    twoFactorActivated: boolean;
-    createdAt: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: number;
+  twoFactorActivated: boolean;
+  createdAt: string;
 }
 
-
-
 type AuthState = {
-    isLoggedIn: boolean;
-    otpVerified: boolean;
-    twoFactorEnabled: boolean;
-    accessToken: string | null;
-    userId: string | null;
-    qrDataUrl?: string;
-  
-    userProfile: UserProfile | null;
-  
-    setLogin: (token: string, userId: string, twoFactorEnabled: boolean) => void;
-    setQrDataUrl: (url: string) => void;
-    setOtpVerified: () => void;
-  
-    setUserProfile: (profile: UserProfile) => void;
-    clearUserProfile: () => void;
-  
-    logout: () => void;
-  };
-  
+  isLoggedIn: boolean;
+  otpVerified: boolean;
+  twoFactorEnabled: boolean;
+  accessToken: string | null;
+  userId: string | null;
+  qrDataUrl?: string;
 
+  userProfile: UserProfile | null;
 
+  setLogin: (token: string, userId: string, twoFactorEnabled: boolean) => void;
+  setQrDataUrl: (url: string) => void;
+  setOtpVerified: () => void;
 
+  setUserProfile: (profile: UserProfile) => void;
+  clearUserProfile: () => void;
 
-export const useAuthStore = create<AuthState>((set) => ({
-    isLoggedIn: false,
-    otpVerified: false,
-    twoFactorEnabled: false,
-    accessToken: null,
-    userId: null,
+  logout: () => void;
+};
 
-    userProfile: null,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      isLoggedIn: false,
+      otpVerified: false,
+      twoFactorEnabled: false,
+      accessToken: null,
+      userId: null,
 
+      userProfile: null,
 
-
-    setLogin: (token, userId, twoFactorEnabled) =>
+      setLogin: (token, userId, twoFactorEnabled) =>
         set({
-            isLoggedIn: true,
-            accessToken: token,
-            userId,
-            twoFactorEnabled
+          isLoggedIn: true,
+          accessToken: token,
+          userId,
+          twoFactorEnabled,
         }),
 
+      setQrDataUrl: (url) => set({ qrDataUrl: url }),
 
-    setQrDataUrl: (url) => set({ qrDataUrl: url }),
-
-
-    setOtpVerified: () =>
+      setOtpVerified: () =>
         set({
-            otpVerified: true,
+          otpVerified: true,
         }),
 
+      setUserProfile: (profile) => set({ userProfile: profile }),
 
-    setUserProfile: (profile) =>
-        set({ userProfile: profile }),
+      clearUserProfile: () => set({ userProfile: null }),
 
-    clearUserProfile: () =>
-        set({ userProfile: null }),
-
-
-    logout: () =>
+      logout: () => {
+        localStorage.removeItem("accessToken");
         set({
-            isLoggedIn: false,
-            otpVerified: false,
-            twoFactorEnabled: false,
-            accessToken: null,
-            userId: null,
-            userProfile: null,
-        }),
-}));
+          isLoggedIn: false,
+          otpVerified: false,
+          twoFactorEnabled: false,
+          accessToken: null,
+          userId: null,
+          userProfile: null,
+        });
+      },
+    }),
+    {
+      name: "auth-storage",
+    }
+  )
+);

@@ -37,10 +37,17 @@ const Login = () => {
       });
     
 
-      const { accesstoken, userId, twoFactorAuthActivated } = res.data.data;
+      const { accesstoken, token, userId, twoFactorAuthActivated } = res.data.data;
+
+      // Use token from response body (fallback for cross-origin cookie issues)
+      const finalToken = token || accesstoken;
+      
+      if (finalToken) {
+        localStorage.setItem('accessToken', finalToken);
+      }
 
       // save login state
-      setLogin(accesstoken, userId, twoFactorAuthActivated);
+      setLogin(finalToken, userId, twoFactorAuthActivated);
 
       if (twoFactorAuthActivated) {
         navigate("/verify-otp");

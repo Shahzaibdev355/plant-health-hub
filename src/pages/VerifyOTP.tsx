@@ -48,26 +48,40 @@ const VerifyOTP = () => {
     try {
       setIsSubmitting(true);
 
-      const res = await axios.post(
-        "/auth/verify-2fa",
-        { totp: otp },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      // Debug: Check if we have the token
+      const storedToken = localStorage.getItem('accessToken') || accessToken;
+      console.log('Token being used:', storedToken);
+      console.log('User ID:', userId);
 
-      const { accessToken: newToken, userId } = res.data.data;
+      // Try the request
+      const res = await axios.post("/auth/verify-2fa", { 
+        totp: otp 
+      });
+
+      const { accessToken: newToken, userId: newUserId } = res.data.data;
+
+      // Store the new token
+      if (newToken) {
+        localStorage.setItem('accessToken', newToken);
+      }
 
       // OTP verified → full login
-      setLogin(newToken, userId, true);
+      setLogin(newToken, newUserId || userId, true);
       setOtpVerified();
 
       toast.success("OTP verified successfully!");
       navigate("/dashboard");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Invalid OTP");
+    } catch (err: unknown) {
+      console.error('2FA verification error:', err.response?.data);
+      console.error('Full error:', err);
+      
+      // If 401, the token might be invalid or expired
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error(err?.response?.data?.message || err?.response?.data?.error || "Invalid OTP");
+      }
     } finally {
       setIsSubmitting(false);
     }

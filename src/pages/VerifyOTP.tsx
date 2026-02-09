@@ -72,15 +72,15 @@ const VerifyOTP = () => {
       toast.success("OTP verified successfully!");
       navigate("/dashboard");
     } catch (err: unknown) {
-      console.error('2FA verification error:', err.response?.data);
+      const error = err as { response?: { status?: number; data?: { message?: string; error?: string } } };
+      console.error('2FA verification error:', error.response?.data);
       console.error('Full error:', err);
       
-      // If 401, the token might be invalid or expired
-      if (err.response?.status === 401) {
+      if (error.response?.status === 401) {
         toast.error("Session expired. Please login again.");
         navigate("/login");
       } else {
-        toast.error(err?.response?.data?.message || err?.response?.data?.error || "Invalid OTP");
+        toast.error(error.response?.data?.message || error.response?.data?.error || "Invalid OTP");
       }
     } finally {
       setIsSubmitting(false);

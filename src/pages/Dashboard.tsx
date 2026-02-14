@@ -8,6 +8,9 @@ const Dashboard = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showSavedPicker, setShowSavedPicker] = useState(false);
+
+  
+
   const [analysisResult, setAnalysisResult] = useState<{
     disease: string;
     confidence: number;

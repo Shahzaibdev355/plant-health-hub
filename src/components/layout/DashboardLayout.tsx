@@ -93,7 +93,7 @@ export const DashboardLayout = () => {
     <SidebarContext.Provider
       value={{ isCollapsed, setIsCollapsed, isProfileOpen, setIsProfileOpen }}
     >
-      <div className="min-h-screen bg-secondary flex">
+      <div className="h-screen bg-secondary flex overflow-hidden">
         {/* Mobile Header */}
         <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 flex items-center px-4">
           <button
@@ -159,7 +159,7 @@ export const DashboardLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 pt-16 md:pt-0">
+        <main className="flex-1 pt-16 md:pt-0 overflow-y-auto custom-scrollbar">
           <div className="p-6 md:p-8">
             <Outlet />
           </div>

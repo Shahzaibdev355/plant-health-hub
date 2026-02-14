@@ -1,8 +1,28 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Images, Calendar, Trash2, FolderPlus, Folder, Upload, ChevronRight, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useImagesStore } from "@/store/images-store";
+
+
+
+const STATIC_FOLDERS = [
+  "Pepper__bell___Bacterial_spot",
+  "Pepper__bell___healthy",
+  "Potato___Early_blight",
+  "Potato___Late_blight",
+  "Potato___healthy",
+  "Tomato_Bacterial_spot",
+  "Tomato_Early_blight",
+  "Tomato_Late_blight",
+  "Tomato_Leaf_Mold",
+  "Tomato_Septoria_leaf_spot",
+  "Tomato_Spider_mites_Two_spotted_spider_mite",
+  "Tomato__Target_Spot",
+  "Tomato__Tomato_YellowLeaf__Curl_Virus",
+  "Tomato__Tomato_mosaic_virus",
+  "Tomato_healthy",
+];
 
 const SavedImages = () => {
   const { folders, images, addFolder, deleteFolder, addImage, deleteImage } = useImagesStore();
@@ -13,7 +33,12 @@ const SavedImages = () => {
   const folderFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTargetFolder, setUploadTargetFolder] = useState<string | null>(null);
 
-  const ungroupedImages = images.filter((img) => img.folderId === null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const foldersPerPage = 5;
+
+
+
+
 
   const toggleFolder = (id: string) => {
     setOpenFolders((prev) => {
@@ -22,6 +47,52 @@ const SavedImages = () => {
       return next;
     });
   };
+
+
+
+  useEffect(() => {
+    if (folders.length === 0) {
+      STATIC_FOLDERS.forEach((folderName) => {
+        const folderId = addFolder(folderName);
+
+        // Add 10 images per folder
+        for (let i = 1; i <= 10; i++) {
+          addImage({
+            imageUrl: `/images/${folderName}/(${i}).JPG`,
+            name: `(${i}).JPG`,
+            folderId,
+          });
+        }
+      });
+    }
+  }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleCreateFolder = () => {
     const name = newFolderName.trim();
@@ -63,6 +134,27 @@ const SavedImages = () => {
     return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
 
+
+  const totalPages = Math.ceil(folders.length / foldersPerPage);
+
+  const indexOfLastFolder = currentPage * foldersPerPage;
+  const indexOfFirstFolder = indexOfLastFolder - foldersPerPage;
+
+  const currentFolders = folders.slice(indexOfFirstFolder, indexOfLastFolder);
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [folders.length]);
+
+
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hidden file inputs */}
@@ -99,10 +191,15 @@ const SavedImages = () => {
             <FolderPlus className="w-4 h-4 mr-1" />
             New Folder
           </Button>
-          <Button variant="outline" size="sm" onClick={() => triggerUpload(null)}>
+
+
+
+          {/* // To uplaod image separately will handle in future */}
+          {/* <Button variant="outline" size="sm" onClick={() => triggerUpload(null)}>
             <Upload className="w-4 h-4 mr-1" />
             Upload Image
-          </Button>
+          </Button> */}
+          
         </div>
       </div>
 
@@ -129,7 +226,10 @@ const SavedImages = () => {
       {folders.length > 0 && (
         <div className="mb-8 space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">Folders</h2>
-          {folders.map((folder) => {
+          {/* {folders.map((folder) => { */}
+
+          {currentFolders.map((folder) => {
+
             const folderImages = images.filter((img) => img.folderId === folder.id);
             const isOpen = openFolders.has(folder.id);
             return (
@@ -177,24 +277,59 @@ const SavedImages = () => {
         </div>
       )}
 
-      {/* Ungrouped Images */}
-      <div>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-          Ungrouped Images
-        </h2>
-        {ungroupedImages.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ungroupedImages.map((image) => (
-              <ImageCard key={image.id} image={image} onDelete={deleteImage} formatDate={formatDate} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-card rounded-xl border border-border p-8 text-center">
-            <Images className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">No ungrouped images yet.</p>
-          </div>
-        )}
-      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center mt-6 gap-2 flex-wrap">
+
+          {/* Previous Button */}
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition
+        ${currentPage === 1
+                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                : "bg-card hover:bg-accent border-border"
+              }`}
+          >
+            Previous
+          </button>
+
+          {/* Page Numbers */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => goToPage(page)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition
+          ${currentPage === page
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card hover:bg-accent border-border"
+                }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          {/* Next Button */}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition
+        ${currentPage === totalPages
+                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                : "bg-card hover:bg-accent border-border"
+              }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+
+
+
+      
+
+
     </div>
   );
 };

@@ -1,15 +1,25 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Upload, Image as ImageIcon, X, Leaf, AlertCircle, Images, Folder, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useImagesStore } from "@/store/images-store";
+import axios from "axios";
+import ReactMarkdown from "react-markdown";
+
 
 const Dashboard = () => {
+
+  const initializeStaticData = useImagesStore((s) => s.initializeStaticData);
+
+  useEffect(() => {
+    initializeStaticData();
+  }, []);
+
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showSavedPicker, setShowSavedPicker] = useState(false);
 
-  
+
 
   const [analysisResult, setAnalysisResult] = useState<{
     disease: string;
@@ -19,6 +29,7 @@ const Dashboard = () => {
 
   const savedImages = useImagesStore((s) => s.images);
   const savedFolders = useImagesStore((s) => s.folders);
+  const isImagesLoading = useImagesStore((s) => s.isLoading);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -43,22 +54,57 @@ const Dashboard = () => {
     if (files && files.length > 0) handleFile(files[0]);
   };
 
+  // const handleFile = async (file: File) => {
+  //   if (!file.type.startsWith("image/")) return;
+  //   const reader = new FileReader();
+  //   reader.onload = (e) => {
+  //     setUploadedImage(e.target?.result as string);
+  //     analyzeImage();
+  //   };
+  //   reader.readAsDataURL(file);
+  // };
+
+
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
+
     const reader = new FileReader();
     reader.onload = (e) => {
       setUploadedImage(e.target?.result as string);
-      analyzeImage();
     };
     reader.readAsDataURL(file);
+
+    await analyzeImage(file);
   };
 
-  const selectSavedImage = (imageUrl: string) => {
-    setUploadedImage(imageUrl);
-    setShowSavedPicker(false);
-    setSelectedFolderId(null);
-    analyzeImage();
+
+
+
+
+
+  const selectSavedImage = async (imageUrl: string) => {
+    try {
+      setUploadedImage(imageUrl);
+      setShowSavedPicker(false);
+      setSelectedFolderId(null);
+
+      // Convert URL to Blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      // Convert Blob to File
+      const file = new File([blob], "saved-image.jpg", {
+        type: blob.type,
+      });
+
+      await analyzeImage(file);
+
+    } catch (error) {
+      console.error("Error processing saved image:", error);
+    }
   };
+
+
 
   const ungroupedImages = useMemo(
     () => savedImages.filter((img) => img.folderId === null),
@@ -70,18 +116,43 @@ const Dashboard = () => {
     [savedImages]
   );
 
-  const analyzeImage = async () => {
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setAnalysisResult({
-      disease: "Leaf Spot Disease",
-      confidence: 94,
-      description:
-        "Leaf spot is a common fungal disease that causes brown or black spots on leaves. Early detection and treatment with fungicides can help manage the disease and prevent spread to other plants.",
-    });
-    setIsAnalyzing(false);
+
+
+  const analyzeImage = async (file: File) => {
+    try {
+      setIsAnalyzing(true);
+      setAnalysisResult(null);
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await axios.post(
+        `${import.meta.env.Classification_API_BASE_URL}/predict`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+
+      setAnalysisResult({
+        disease: response.data.disease,
+        confidence: response.data.confidence,
+        description: response.data.description,
+      });
+
+
+
+    } catch (error) {
+      console.error("Prediction error:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
+
+
 
   const clearImage = () => {
     setUploadedImage(null);
@@ -166,7 +237,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 /* Folder list + ungrouped images */
-                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2" >
                   {savedFolders.map((folder) => {
                     const count = folderImages(folder.id).length;
                     return (
@@ -200,13 +271,34 @@ const Dashboard = () => {
                     </>
                   )}
 
-                  {savedFolders.length === 0 && ungroupedImages.length === 0 && (
+                  {/* {savedFolders.length === 0 && ungroupedImages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-[260px] text-center">
                       <Images className="w-10 h-10 text-muted-foreground mb-2" />
                       <p className="text-sm text-muted-foreground">No saved images yet.</p>
                       <p className="text-xs text-muted-foreground">Go to Saved Images to upload some first.</p>
                     </div>
-                  )}
+                  )} */}
+
+                  {isImagesLoading ? (
+                    <div className="flex flex-col items-center justify-center h-[260px] text-center">
+
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="h-12 rounded-lg bg-accent animate-pulse"></div>
+                        ))}
+                      </div>
+
+                    </div>
+                  ) : savedFolders.length === 0 && ungroupedImages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-[260px] text-center">
+                      <Images className="w-10 h-10 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">No saved images yet.</p>
+                      <p className="text-xs text-muted-foreground">Go to Saved Images to upload some first.</p>
+                    </div>
+                  ) : null}
+
+
+
                 </div>
               )}
             </div>
@@ -278,17 +370,27 @@ const Dashboard = () => {
                       <AlertCircle className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-col items-start mb-2">
                         <h3 className="text-lg font-semibold text-foreground">{analysisResult.disease}</h3>
                         <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-medium rounded-full">
                           {analysisResult.confidence}% Match
                         </span>
                       </div>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{analysisResult.description}</p>
+                      {/* <p className="text-muted-foreground text-sm leading-relaxed">{analysisResult.description}</p> */}
+                      <div className="prose prose-sm max-w-none
+                        prose-headings:text-foreground
+                        prose-strong:text-primary
+                        prose-li:marker:text-primary
+                        prose-p:text-muted-foreground">
+                        <ReactMarkdown>
+                          {analysisResult.description}
+                        </ReactMarkdown>
+                      </div>
+
                     </div>
                   </div>
                   <div className="mt-6 flex gap-3">
-                    <Button className="flex-1">Save Result</Button>
+                    <Button className="flex-1" disabled style={{ cursor: 'not-allowed', pointerEvents: 'all' }}>Save Result</Button>
                     <Button variant="outline" className="flex-1" onClick={clearImage}>
                       Analyze Another
                     </Button>

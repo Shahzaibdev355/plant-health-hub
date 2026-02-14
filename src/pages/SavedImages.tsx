@@ -6,26 +6,30 @@ import { useImagesStore } from "@/store/images-store";
 
 
 
-const STATIC_FOLDERS = [
-  "Pepper__bell___Bacterial_spot",
-  "Pepper__bell___healthy",
-  "Potato___Early_blight",
-  "Potato___Late_blight",
-  "Potato___healthy",
-  "Tomato_Bacterial_spot",
-  "Tomato_Early_blight",
-  "Tomato_Late_blight",
-  "Tomato_Leaf_Mold",
-  "Tomato_Septoria_leaf_spot",
-  "Tomato_Spider_mites_Two_spotted_spider_mite",
-  "Tomato__Target_Spot",
-  "Tomato__Tomato_YellowLeaf__Curl_Virus",
-  "Tomato__Tomato_mosaic_virus",
-  "Tomato_healthy",
-];
+// const STATIC_FOLDERS = [
+//   "Pepper__bell___Bacterial_spot",
+//   "Pepper__bell___healthy",
+//   "Potato___Early_blight",
+//   "Potato___Late_blight",
+//   "Potato___healthy",
+//   "Tomato_Bacterial_spot",
+//   "Tomato_Early_blight",
+//   "Tomato_Late_blight",
+//   "Tomato_Leaf_Mold",
+//   "Tomato_Septoria_leaf_spot",
+//   "Tomato_Spider_mites_Two_spotted_spider_mite",
+//   "Tomato__Target_Spot",
+//   "Tomato__Tomato_YellowLeaf__Curl_Virus",
+//   "Tomato__Tomato_mosaic_virus",
+//   "Tomato_healthy",
+// ];
 
 const SavedImages = () => {
+
+  const initializeStaticData = useImagesStore((s) => s.initializeStaticData);
   const { folders, images, addFolder, deleteFolder, addImage, deleteImage } = useImagesStore();
+
+
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
@@ -38,6 +42,10 @@ const SavedImages = () => {
 
 
 
+  // folder loading
+  useEffect(() => {
+    initializeStaticData();
+  }, []);
 
 
   const toggleFolder = (id: string) => {
@@ -50,22 +58,22 @@ const SavedImages = () => {
 
 
 
-  useEffect(() => {
-    if (folders.length === 0) {
-      STATIC_FOLDERS.forEach((folderName) => {
-        const folderId = addFolder(folderName);
+  // useEffect(() => {
+  //   if (folders.length === 0) {
+  //     STATIC_FOLDERS.forEach((folderName) => {
+  //       const folderId = addFolder(folderName);
 
-        // Add 10 images per folder
-        for (let i = 1; i <= 10; i++) {
-          addImage({
-            imageUrl: `/images/${folderName}/(${i}).JPG`,
-            name: `(${i}).JPG`,
-            folderId,
-          });
-        }
-      });
-    }
-  }, []);
+  //       // Add 10 images per folder
+  //       for (let i = 1; i <= 10; i++) {
+  //         addImage({
+  //           imageUrl: `/images/${folderName}/(${i}).JPG`,
+  //           name: `(${i}).JPG`,
+  //           folderId,
+  //         });
+  //       }
+  //     });
+  //   }
+  // }, []);
 
 
 
@@ -199,7 +207,7 @@ const SavedImages = () => {
             <Upload className="w-4 h-4 mr-1" />
             Upload Image
           </Button> */}
-          
+
         </div>
       </div>
 
@@ -327,7 +335,7 @@ const SavedImages = () => {
 
 
 
-      
+
 
 
     </div>

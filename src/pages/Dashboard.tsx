@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Upload, Image as ImageIcon, X, Leaf, AlertCircle, Images } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Upload, Image as ImageIcon, X, Leaf, AlertCircle, Images, Folder, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useImagesStore } from "@/store/images-store";
 
@@ -15,6 +15,8 @@ const Dashboard = () => {
   } | null>(null);
 
   const savedImages = useImagesStore((s) => s.images);
+  const savedFolders = useImagesStore((s) => s.folders);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -51,8 +53,19 @@ const Dashboard = () => {
   const selectSavedImage = (imageUrl: string) => {
     setUploadedImage(imageUrl);
     setShowSavedPicker(false);
+    setSelectedFolderId(null);
     analyzeImage();
   };
+
+  const ungroupedImages = useMemo(
+    () => savedImages.filter((img) => img.folderId === null),
+    [savedImages]
+  );
+
+  const folderImages = useMemo(
+    () => (folderId: string) => savedImages.filter((img) => img.folderId === folderId),
+    [savedImages]
+  );
 
   const analyzeImage = async () => {
     setIsAnalyzing(true);
@@ -116,26 +129,81 @@ const Dashboard = () => {
           </div>
 
           {showSavedPicker ? (
-            /* Saved Images Picker */
+            /* Saved Images Picker - Folder Based */
             <div className="border border-border rounded-xl p-4 min-h-[300px]">
-              {savedImages.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
-                  {savedImages.map((img) => (
-                    <button
-                      key={img.id}
-                      onClick={() => selectSavedImage(img.imageUrl)}
-                      className="rounded-lg border border-border overflow-hidden hover:border-primary transition-colors text-left"
-                    >
-                      <img src={img.imageUrl} alt={img.name} className="w-full aspect-video object-cover" />
-                      <p className="text-xs text-foreground p-2 truncate">{img.name}</p>
-                    </button>
-                  ))}
+              {selectedFolderId !== null ? (
+                /* Images inside selected folder */
+                <div>
+                  <button
+                    onClick={() => setSelectedFolderId(null)}
+                    className="flex items-center gap-1 text-sm text-primary mb-3 hover:underline"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to folders
+                  </button>
+                  {(() => {
+                    const imgs = folderImages(selectedFolderId);
+                    return imgs.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3 max-h-[260px] overflow-y-auto custom-scrollbar">
+                        {imgs.map((img) => (
+                          <button
+                            key={img.id}
+                            onClick={() => selectSavedImage(img.imageUrl)}
+                            className="rounded-lg border border-border overflow-hidden hover:border-primary transition-colors text-left"
+                          >
+                            <img src={img.imageUrl} alt={img.name} className="w-full aspect-video object-cover" />
+                            <p className="text-xs text-foreground p-2 truncate">{img.name}</p>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-8">No images in this folder.</p>
+                    );
+                  })()}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-[300px] text-center">
-                  <Images className="w-10 h-10 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No saved images yet.</p>
-                  <p className="text-xs text-muted-foreground">Go to Saved Images to upload some first.</p>
+                /* Folder list + ungrouped images */
+                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {savedFolders.map((folder) => {
+                    const count = folderImages(folder.id).length;
+                    return (
+                      <button
+                        key={folder.id}
+                        onClick={() => setSelectedFolderId(folder.id)}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary transition-colors text-left"
+                      >
+                        <Folder className="w-5 h-5 text-primary flex-shrink-0" />
+                        <span className="flex-1 text-sm text-foreground truncate">{folder.name}</span>
+                        <span className="text-xs text-muted-foreground">{count} image{count !== 1 ? "s" : ""}</span>
+                      </button>
+                    );
+                  })}
+
+                  {ungroupedImages.length > 0 && (
+                    <>
+                      <p className="text-xs text-muted-foreground pt-2">Ungrouped</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {ungroupedImages.map((img) => (
+                          <button
+                            key={img.id}
+                            onClick={() => selectSavedImage(img.imageUrl)}
+                            className="rounded-lg border border-border overflow-hidden hover:border-primary transition-colors text-left"
+                          >
+                            <img src={img.imageUrl} alt={img.name} className="w-full aspect-video object-cover" />
+                            <p className="text-xs text-foreground p-2 truncate">{img.name}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {savedFolders.length === 0 && ungroupedImages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-[260px] text-center">
+                      <Images className="w-10 h-10 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">No saved images yet.</p>
+                      <p className="text-xs text-muted-foreground">Go to Saved Images to upload some first.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

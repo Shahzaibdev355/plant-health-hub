@@ -5,29 +5,21 @@ import { Input } from "@/components/ui/input";
 import { useImagesStore } from "@/store/images-store";
 
 
-
-// const STATIC_FOLDERS = [
-//   "Pepper__bell___Bacterial_spot",
-//   "Pepper__bell___healthy",
-//   "Potato___Early_blight",
-//   "Potato___Late_blight",
-//   "Potato___healthy",
-//   "Tomato_Bacterial_spot",
-//   "Tomato_Early_blight",
-//   "Tomato_Late_blight",
-//   "Tomato_Leaf_Mold",
-//   "Tomato_Septoria_leaf_spot",
-//   "Tomato_Spider_mites_Two_spotted_spider_mite",
-//   "Tomato__Target_Spot",
-//   "Tomato__Tomato_YellowLeaf__Curl_Virus",
-//   "Tomato__Tomato_mosaic_virus",
-//   "Tomato_healthy",
-// ];
-
 const SavedImages = () => {
 
-  const initializeStaticData = useImagesStore((s) => s.initializeStaticData);
-  const { folders, images, addFolder, deleteFolder, addImage, deleteImage } = useImagesStore();
+  // const initializeStaticData = useImagesStore((s) => s.initializeStaticData);
+  // const { folders, images, addFolder, deleteFolder, addImage, deleteImage } = useImagesStore();
+
+  const {
+    folders,
+    images,
+    initializeDefaultFolders,
+    fetchUserFolders,
+    createFolder,
+    deleteFolder,
+    uploadImage,
+    deleteImage,
+  } = useImagesStore();
 
 
   const [newFolderName, setNewFolderName] = useState("");
@@ -43,8 +35,13 @@ const SavedImages = () => {
 
 
   // folder loading
+  // useEffect(() => {
+  //   initializeStaticData();
+  // }, []);
+
   useEffect(() => {
-    initializeStaticData();
+    initializeDefaultFolders();
+    fetchUserFolders();
   }, []);
 
 
@@ -57,76 +54,48 @@ const SavedImages = () => {
   };
 
 
-
-  // useEffect(() => {
-  //   if (folders.length === 0) {
-  //     STATIC_FOLDERS.forEach((folderName) => {
-  //       const folderId = addFolder(folderName);
-
-  //       // Add 10 images per folder
-  //       for (let i = 1; i <= 10; i++) {
-  //         addImage({
-  //           imageUrl: `/images/${folderName}/(${i}).JPG`,
-  //           name: `(${i}).JPG`,
-  //           folderId,
-  //         });
-  //       }
-  //     });
-  //   }
-  // }, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     const name = newFolderName.trim();
     if (!name) return;
-    addFolder(name);
+    // addFolder(name);
+    await createFolder(name);
     setNewFolderName("");
     setShowNewFolder(false);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, folderId: string | null) => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    // folderId: string
+    folderId: string | null
+  ) => {
     const files = e.target.files;
     if (!files) return;
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        addImage({
-          imageUrl: ev.target?.result as string,
-          name: file.name,
-          folderId,
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+
+    for (const file of Array.from(files)) {
+      await uploadImage(file, folderId);
+    }
+
     e.target.value = "";
   };
+
+
+  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, folderId: string | null) => {
+  //   const files = e.target.files;
+  //   if (!files) return;
+  //   Array.from(files).forEach((file) => {
+  //     if (!file.type.startsWith("image/")) return;
+  //     const reader = new FileReader();
+  //     reader.onload = (ev) => {
+  //       addImage({
+  //         imageUrl: ev.target?.result as string,
+  //         name: file.name,
+  //         folderId,
+  //       });
+  //     };
+  //     reader.readAsDataURL(file);
+  //   });
+  //   e.target.value = "";
+  // };
 
   const triggerUpload = (folderId: string | null) => {
     setUploadTargetFolder(folderId);
@@ -254,12 +223,37 @@ const SavedImages = () => {
                     <span className="text-xs text-muted-foreground">({folderImages.length} images)</span>
                   </div>
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="sm" onClick={() => triggerUpload(folder.id)}>
+
+                    {!folder.isDefault && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => triggerUpload(folder.id)}
+                        >
+                          <Upload className="w-4 h-4" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteFolder(folder.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </>
+                    )}
+
+
+
+                    {/* <Button variant="ghost" size="sm" onClick={() => triggerUpload(folder.id)}>
                       <Upload className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => deleteFolder(folder.id)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    </Button> */}
+
+
                   </div>
                 </div>
 

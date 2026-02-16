@@ -61,13 +61,13 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Dashboard Routes */}
-          <Route element={<DashboardLayout />}>
+          {/* <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/show-images" element={<SavedImages />} />
-          </Route>
+          </Route> */}
 
 
-          {/* <Route element={<DashboardLayout />}>
+          <Route element={<DashboardLayout />}>
             <Route
               path="/dashboard"
               element={
@@ -84,7 +84,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-          </Route> */}
+          </Route>
 
 
 

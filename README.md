@@ -79,19 +79,23 @@ Our AI model processes your images using:
 *Overview of your plants and recent analyses*
 
 ### Image Upload Interface
-<!-- Add Image Upload Screenshot Here -->
+<img width="1920" height="921" alt="image" src="https://github.com/user-attachments/assets/52cc1e0a-bfc6-4c7b-895c-70b13e74c5f9" />
+
 *Simple, intuitive upload experience*
 
 ### AI Analysis Results
-<!-- Add AI Analysis Screenshot Here -->
+<img width="1110" height="834" alt="image" src="https://github.com/user-attachments/assets/3edc3f40-9d5d-4cb7-b568-556a5cb858df" />
+
 *Detailed disease detection and recommendations*
 
 ### Plant Profile Management
-<!-- Add Plant Folder Management Screenshot Here -->
+<img width="1920" height="916" alt="image" src="https://github.com/user-attachments/assets/49c3a3b1-4707-4116-84d8-7026bc307e0c" />
+
 *Organize and track multiple plants*
 
 ### Two-Factor Authentication Setup
-<!-- Add 2FA Setup Screenshot Here -->
+<img width="704" height="889" alt="image" src="https://github.com/user-attachments/assets/546881de-100b-4ba9-afa4-873aeed09237" />
+
 *Secure your account with 2FA*
 
 ---

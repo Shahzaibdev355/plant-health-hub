@@ -21,21 +21,50 @@ interface ImagesStore {
   images: SavedImage[];
   isLoading: boolean;
 
+  hasInitialized: boolean;
+  initializeAppData: () => Promise<void>;
+
+
   initializeDefaultFolders: () => void;
   fetchUserFolders: () => Promise<void>;
+  fetchUserImages: () => Promise<void>
   createFolder: (name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
 
   uploadImage: (file: File, folderId: string) => Promise<void>;
   deleteImage: (id: string) => Promise<void>;
+
 }
 
 export const useImagesStore = create<ImagesStore>((set, get) => ({
   folders: [],
   images: [],
   isLoading: false,
+  hasInitialized: false,
 
-  // ✅ DEFAULT FOLDERS (STATIC)
+  initializeAppData: async () => {
+    if (get().hasInitialized) return;
+
+    try {
+      set({ isLoading: true });
+
+      // default folders FIRST
+      get().initializeDefaultFolders();
+
+      await Promise.all([
+        get().fetchUserFolders(),
+        get().fetchUserImages(),
+      ]);
+
+      set({ hasInitialized: true });
+    } catch (error) {
+      console.error("App initialization error:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // DEFAULT FOLDERS (STATIC)
   initializeDefaultFolders: () => {
     const STATIC_FOLDERS = [
       "Pepper__bell___Bacterial_spot",
@@ -181,6 +210,40 @@ export const useImagesStore = create<ImagesStore>((set, get) => ({
       console.error("Upload error:", error);
     }
   },
+
+
+  fetchUserImages: async () => {
+    try {
+      const res = await api.get(`/images/get-images`);
+
+      const userImages: SavedImage[] = res.data.data.map((img: any) => ({
+        id: img._id,
+        imageUrl: img.imageUrl,
+        name: img.publicId,
+        folderId: img.folderId,
+        date: img.createdAt,
+      }));
+
+      set((state) => ({
+        images: [
+          ...state.images.filter(img =>
+            state.folders.find(f => f.id === img.folderId)?.isDefault
+          ),
+          ...userImages
+        ],
+      }));
+
+      // set((state) => ({
+      //   images: [
+      //     ...state.images.filter(img => img.folderId && img.folderId.includes("Tomato") || img.folderId.includes("Potato") || img.folderId.includes("Pepper")),
+      //     ...userImages
+      //   ],
+      // }));
+    } catch (error) {
+      console.error("Fetch images error:", error);
+    }
+  },
+
 
   // ✅ DELETE IMAGE
   deleteImage: async (id: string) => {

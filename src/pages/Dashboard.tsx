@@ -8,10 +8,10 @@ import ReactMarkdown from "react-markdown";
 
 const Dashboard = () => {
 
-  // const initializeStaticData = useImagesStore((s) => s.initializeStaticData);
+  // const initializeAppData = useImagesStore((s) => s.initializeAppData);
 
   // useEffect(() => {
-  //   initializeStaticData();
+  //   initializeAppData();
   // }, []);
 
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -127,8 +127,7 @@ const Dashboard = () => {
       formData.append("image", file);
 
       const response = await axios.post(
-        // `${import.meta.env.Classification_API_BASE_URL}/predict`,
-        "http://127.0.0.1:5000/predict",
+        `${import.meta.env.VITE_Classification_API_BASE_URL}/predict`,
         formData,
         {
           headers: {

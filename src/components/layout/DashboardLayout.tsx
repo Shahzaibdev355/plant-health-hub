@@ -18,6 +18,7 @@ import { ProfileModal } from "@/components/dashboard/ProfileModal";
 import { useEffect } from "react";
 import api from "@/api/axios";
 import { useAuthStore } from "@/store/auth-store";
+import { useImagesStore } from "@/store/images-store";
 
 
 interface SidebarContextType {
@@ -43,6 +44,14 @@ const menuItems = [
 ];
 
 export const DashboardLayout = () => {
+
+
+  const initializeAppData = useImagesStore((s) => s.initializeAppData);
+
+  useEffect(() => {
+    initializeAppData();
+  }, []);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

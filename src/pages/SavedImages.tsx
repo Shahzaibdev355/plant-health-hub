@@ -18,6 +18,7 @@ const SavedImages = () => {
     createFolder,
     deleteFolder,
     uploadImage,
+    fetchUserImages,
     deleteImage,
   } = useImagesStore();
 
@@ -39,10 +40,11 @@ const SavedImages = () => {
   //   initializeStaticData();
   // }, []);
 
-  useEffect(() => {
-    initializeDefaultFolders();
-    fetchUserFolders();
-  }, []);
+  // useEffect(() => {
+  //   initializeDefaultFolders();
+  //   fetchUserFolders();
+  //   fetchUserImages();
+  // }, []);
 
 
   const toggleFolder = (id: string) => {

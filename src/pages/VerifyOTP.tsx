@@ -50,8 +50,8 @@ const VerifyOTP = () => {
 
       // Debug: Check if we have the token
       const storedToken = localStorage.getItem('accessToken') || accessToken;
-      console.log('Token being used:', storedToken);
-      console.log('User ID:', userId);
+      // console.log('Token being used:', storedToken);
+      // console.log('User ID:', userId);
 
       // Try the request
       const res = await axios.post("/auth/verify-2fa", { 
